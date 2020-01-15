@@ -30,62 +30,7 @@ namespace Main
             // respond with ping
             await ctx.RespondAsync($"{emoji} Pong! Ping: {ctx.Client.Ping}ms");
         }
-
-        [Command("greet"), Description("Says hi to specified user."), Aliases("sayhi", "say_hi")]
-        public async Task Greet(CommandContext ctx, [Description("The user to say hi to.")] DiscordMember member) // this command takes a member as an argument; you can pass one by username, nickname, id, or mention
-        {
-            // note the [Description] attribute on the argument.
-            // this will appear when people invoke help for the
-            // command.
-
-            // let's trigger a typing indicator to let
-            // users know we're working
-            await ctx.TriggerTypingAsync();
-
-            // let's make the message a bit more colourful
-            var emoji = DiscordEmoji.FromName(ctx.Client, ":wave:");
-
-            // and finally, let's respond and greet the user.
-            await ctx.RespondAsync($"{emoji} Hello, {member.Mention}!");
-        }
-
-        [Command("sum"), Description("Sums all given numbers and returns said sum.")]
-        public async Task SumOfNumbers(CommandContext ctx, [Description("Integers to sum.")] params int[] args)
-        {
-            // note the params on the argument. It will indicate
-            // that the command will capture all the remaining arguments
-            // into a single array
-
-            // let's trigger a typing indicator to let
-            // users know we're working
-            await ctx.TriggerTypingAsync();
-
-            // calculate the sum
-            var sum = args.Sum();
-
-            // and send it to the user
-            await ctx.RespondAsync($"The sum of these numbers is {sum.ToString("#,##0")}");
-        }
     }
-
-    [Group("admin")] // let's mark this class as a command group
-    [Description("Administrative commands.")] // give it a description for help purposes
-    [Hidden] // let's hide this from the eyes of curious users
-    [RequirePermissions(Permissions.ManageGuild)] // and restrict this to users who have appropriate permissions
-    public class ExampleGrouppedCommands : BaseCommandModule
-    {
-        // all the commands will need to be executed as <prefix>admin <command> <arguments>
-
-        // this command will be only executable by the bot's owner
-        [Command("sudo"), Description("Run a command as another user."), Hidden, RequireOwner]
-        public async Task SudoAsync(CommandContext ctx, DiscordUser user, [RemainingText] string content)
-        {
-            var cmd = ctx.CommandsNext.FindCommand(content, out var args);
-            var fctx = ctx.CommandsNext.CreateFakeContext(user, ctx.Channel, content, ctx.Prefix, cmd, args);
-            await ctx.CommandsNext.ExecuteCommandAsync(fctx).ConfigureAwait(false);
-        }
-    }
-
 
     [Group("MAL")] // this makes the class a group, but with a twist; the class now needs an ExecuteGroupAsync method
     [Description("My AnimeList")]

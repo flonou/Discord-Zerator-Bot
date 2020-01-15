@@ -48,83 +48,78 @@ namespace Main
                     webRequest.Headers.Add("Client-ID", Token);
                     webRequest.Headers.Add("Accept", "application/vnd.twitchtv.v5+json");
 
-                    using (System.IO.Stream s = webRequest.GetResponse().GetResponseStream())
+                    using System.IO.Stream s = webRequest.GetResponse().GetResponseStream();
+                    using System.IO.StreamReader sr = new System.IO.StreamReader(s);
+                    var jsonResponse = sr.ReadToEnd();
+                    //Console.WriteLine(string.Format("Response: {0}", jsonResponse));
+                    if (jsonResponse.Contains("display_name"))
                     {
-                        using (System.IO.StreamReader sr = new System.IO.StreamReader(s))
+                        var twitch = JsonConvert.DeserializeObject<Streamer>(jsonResponse);
+                        //return string.Format("Response: {0}", jsonResponse);
+                        if (!id.IsLive)
                         {
-                            var jsonResponse = sr.ReadToEnd();
-                            //Console.WriteLine(string.Format("Response: {0}", jsonResponse));
-                            if (jsonResponse.Contains("display_name"))
+                            Console.WriteLine(string.Format($"Live {id.Name} up!"));
+                            // wrap it into an embed
+                            var embed = new DiscordEmbedBuilder
                             {
-                                var twitch = JsonConvert.DeserializeObject<Streamer>(jsonResponse);
-                                //return string.Format("Response: {0}", jsonResponse);
-                                if (!id.IsLive)
-                                {
-                                    Console.WriteLine(string.Format($"Live {id.Name} up!"));
-                                    // wrap it into an embed
-                                    var embed = new DiscordEmbedBuilder
-                                    {
-                                        Title = twitch.Stream.Channel.Display_name,
-                                        Description = twitch.Stream.Channel.Status,
-                                        Url = twitch.Stream.Channel.Url,
-                                        ImageUrl = twitch.Stream.Preview.Medium + rnd.Next(999999),
-                                        ThumbnailUrl = twitch.Stream.Channel.Logo
-                                    };
-                                    DiscordEmbedBuilder.EmbedFooter foot = new DiscordEmbedBuilder.EmbedFooter
-                                    {
-                                        Text = $"Joue à: " + twitch.Stream.Channel.Game,
-                                        IconUrl = "https://puush.poneyy.fr/TDaq.png"
-                                    };
-                                    embed.Footer = foot;
-                                    DiscordChannel info;
-                                    foreach (ulong channel in id.Channels)
-                                    {
-                                        info = await client.GetChannelAsync(channel);
-                                        await info.SendMessageAsync(embed: embed);
-                                    }
-                                    /* DiscordChannel info = await client.GetChannelAsync(channel);
-                                     await info.SendMessageAsync(embed: embed);*/
-                                    var conf = LoadConfig();
-                                    conf.Status.First(d => d.Id == id.Id).IsLive = true;
-                                    await SaveConfig(conf);
-                                    client.DebugLogger.LogMessage(LogLevel.Info, "PoneyyBot", $"{id} en live", DateTime.Now);
-                                }
-                                else client.DebugLogger.LogMessage(LogLevel.Info, "PoneyyBot", $"{id} en live", DateTime.Now);
-                            }
-                            else if (id.IsLive)
+                                Title = twitch.Stream.Channel.Display_name,
+                                Description = twitch.Stream.Channel.Status,
+                                Url = twitch.Stream.Channel.Url,
+                                ImageUrl = twitch.Stream.Preview.Medium + rnd.Next(999999),
+                                ThumbnailUrl = twitch.Stream.Channel.Logo
+                            };
+                            DiscordEmbedBuilder.EmbedFooter foot = new DiscordEmbedBuilder.EmbedFooter
                             {
-                                // wrap it into an embed
-                                var embed = new DiscordEmbedBuilder
-                                {
-                                    Title = id.Name,
-                                    Description = "Fin du live:wave: :wave:",
-                                    Url = "https://zerator.com/programmation"
-                                };
-                                DiscordEmbedBuilder.EmbedFooter foot = new DiscordEmbedBuilder.EmbedFooter
-                                {
-                                    Text = "Consultez la programmation pour plus d'informations!",
-                                    IconUrl = "https://puush.poneyy.fr/TDaq.png"
-                                };
-                                embed.Footer = foot;
-                                DiscordChannel info;
-                                /*info = await client.GetChannelAsync(id.Channels[0]);
-                                await info.SendMessageAsync(embed: embed);*/
-                                foreach (ulong channel in id.Channels)
-                                {
-                                    info = await client.GetChannelAsync(channel);
-                                    await info.SendMessageAsync(embed: embed);
-                                }
-
-                                var conf = LoadConfig();
-                                conf.Status.First(d => d.Id == id.Id).IsLive = false;
-                                await SaveConfig(conf);
-                                client.DebugLogger.LogMessage(LogLevel.Info, "PoneyyBot", $"{id} plus en live", DateTime.Now);
+                                Text = $"Joue à: " + twitch.Stream.Channel.Game,
+                                IconUrl = "https://puush.poneyy.fr/TDaq.png"
+                            };
+                            embed.Footer = foot;
+                            DiscordChannel info;
+                            foreach (ulong channel in id.Channels)
+                            {
+                                info = await client.GetChannelAsync(channel);
+                                await info.SendMessageAsync(embed: embed);
                             }
-                            //else Console.WriteLine($"{id} pas en live");
-                            else client.DebugLogger.LogMessage(LogLevel.Info, "PoneyyBot", $"{id} pas en live", DateTime.Now);
-                            //or offline
+                            /* DiscordChannel info = await client.GetChannelAsync(channel);
+                             await info.SendMessageAsync(embed: embed);*/
+                            var conf = LoadConfig();
+                            conf.Status.First(d => d.Id == id.Id).IsLive = true;
+                            await SaveConfig(conf);
+                            client.DebugLogger.LogMessage(LogLevel.Info, "PoneyyBot", $"{id} en live", DateTime.Now);
                         }
+                        else client.DebugLogger.LogMessage(LogLevel.Info, "PoneyyBot", $"{id} en live", DateTime.Now);
                     }
+                    else if (id.IsLive)
+                    {
+                        // wrap it into an embed
+                        var embed = new DiscordEmbedBuilder
+                        {
+                            Title = id.Name,
+                            Description = "Fin du live:wave: :wave:",
+                            Url = "https://zerator.com/programmation"
+                        };
+                        DiscordEmbedBuilder.EmbedFooter foot = new DiscordEmbedBuilder.EmbedFooter
+                        {
+                            Text = "Consultez la programmation pour plus d'informations!",
+                            IconUrl = "https://puush.poneyy.fr/TDaq.png"
+                        };
+                        embed.Footer = foot;
+                        DiscordChannel info;
+                        /*info = await client.GetChannelAsync(id.Channels[0]);
+                        await info.SendMessageAsync(embed: embed);*/
+                        foreach (ulong channel in id.Channels)
+                        {
+                            info = await client.GetChannelAsync(channel);
+                            await info.SendMessageAsync(embed: embed);
+                        }
+
+                        var conf = LoadConfig();
+                        conf.Status.First(d => d.Id == id.Id).IsLive = false;
+                        await SaveConfig(conf);
+                        client.DebugLogger.LogMessage(LogLevel.Info, "PoneyyBot", $"{id} plus en live", DateTime.Now);
+                    }
+                    //else Console.WriteLine($"{id} pas en live");
+                    else client.DebugLogger.LogMessage(LogLevel.Info, "PoneyyBot", $"{id} pas en live", DateTime.Now);
                 }
             }
             catch (Exception ex)
@@ -195,15 +190,11 @@ namespace Main
                         webRequest.Headers.Add("Client-ID", "0r570obyz0in1a85pqv16as54sfce1");
                         webRequest.Headers.Add("Accept", "application/vnd.twitchtv.v5+json");
 
-                        using (System.IO.Stream s = webRequest.GetResponse().GetResponseStream())
-                        {
-                            using (System.IO.StreamReader sr = new System.IO.StreamReader(s))
-                            {
-                                var jsonResponse = sr.ReadToEnd();
-                                Console.WriteLine(string.Format("Response: {0}", jsonResponse));
-                                await ctx.RespondAsync($"```{jsonResponse}```");
-                            }
-                        }
+                        using System.IO.Stream s = webRequest.GetResponse().GetResponseStream();
+                        using System.IO.StreamReader sr = new System.IO.StreamReader(s);
+                        var jsonResponse = sr.ReadToEnd();
+                        Console.WriteLine(string.Format("Response: {0}", jsonResponse));
+                        await ctx.RespondAsync($"```{jsonResponse}```");
                     }
                 }
                 catch (Exception ex)
@@ -231,29 +222,25 @@ namespace Main
                         webRequest.Headers.Add("Client-ID", "0r570obyz0in1a85pqv16as54sfce1");
                         webRequest.Headers.Add("Accept", "application/vnd.twitchtv.v5+json");
 
-                        using (System.IO.Stream s = webRequest.GetResponse().GetResponseStream())
+                        using System.IO.Stream s = webRequest.GetResponse().GetResponseStream();
+                        using System.IO.StreamReader sr = new System.IO.StreamReader(s);
+                        var jsonResponse = sr.ReadToEnd();
+                        var twitch = JsonConvert.DeserializeObject<NameRequest>(jsonResponse);
+                        int id = int.Parse(twitch.Users[0].Id);
+                        //Console.WriteLine(string.Format("Response: {0}", jsonResponse));
+                        if (cfgjson.Status.Any(prod => prod.Id == id))
                         {
-                            using (System.IO.StreamReader sr = new System.IO.StreamReader(s))
-                            {
-                                var jsonResponse = sr.ReadToEnd();
-                                var twitch = JsonConvert.DeserializeObject<NameRequest>(jsonResponse);
-                                int id = int.Parse(twitch.Users[0].Id);
-                                //Console.WriteLine(string.Format("Response: {0}", jsonResponse));
-                                if (cfgjson.Status.Any(prod => prod.Id == id))
-                                {
-                                    int idx = cfgjson.Status.FindIndex(prod => prod.Id == id);
-                                    cfgjson.Status[idx].Channels.Add(ctx.Channel.Id);
-                                    await ctx.RespondAsync($"Notification de live de {name} ajoutée a ce channel.");
-                                }
-                                else
-                                {
-                                    Status stream = new Status(name, false, id, ctx.Channel.Id);
-                                    cfgjson.Status.Add(stream);
-                                    await ctx.RespondAsync($"Notification de live de {name} ajoutée a ce channel.");
-                                }
-                                await SaveConfig(cfgjson);
-                            }
+                            int idx = cfgjson.Status.FindIndex(prod => prod.Id == id);
+                            cfgjson.Status[idx].Channels.Add(ctx.Channel.Id);
+                            await ctx.RespondAsync($"Notification de live de {name} ajoutée a ce channel.");
                         }
+                        else
+                        {
+                            Status stream = new Status(name, false, id, ctx.Channel.Id);
+                            cfgjson.Status.Add(stream);
+                            await ctx.RespondAsync($"Notification de live de {name} ajoutée a ce channel.");
+                        }
+                        await SaveConfig(cfgjson);
                     }
                 }
                 catch
