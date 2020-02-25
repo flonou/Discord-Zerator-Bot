@@ -1,4 +1,6 @@
 {
-  "token": "Put your bot token here",
-  "prefix": ";;"
+    "token": "Put your bot token here",
+    "prefix": ["d#","$","d#+"],
+    "shards":1,
+	"twitchToken": "Put your twitch token here"
 }
