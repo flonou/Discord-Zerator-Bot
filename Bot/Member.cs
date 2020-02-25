@@ -1,27 +1,4 @@
-﻿// THIS FILE IS A PART OF EMZI0767'S BOT EXAMPLES
-//
-// --------
-// 
-// Copyright 2017 Emzi0767
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-// 
-//  http://www.apache.org/licenses/LICENSE-2.0
-// 
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
-// --------
-//
-// This is a commands example. It shows how to properly utilize 
-// CommandsNext, as well as use its advanced functionality.
-
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 using System.Linq;
@@ -39,22 +16,22 @@ namespace Main
     {
         // thread checkant les lives contenu dans la config
         /************************* SEUL PARTIE A DECOMMENTER, 3.2.3 VERS 4.0 COMPATIBILITE ******/
-        /* public static async Task CheckMember(DiscordClient client)
+         public static async Task CheckMember(DiscordClient client)
          {
              await Check(client);
 
-         }*/
+         }
 
 
 
         //check et affichage par channel des lives
-        /*private static async Task Check(DiscordClient client)
+        private static async Task Check(DiscordClient client)
         {
             try
             {
                 ListMembers members = LoadConfig();
-                DiscordRole roleMembre = client.Guilds[138283154589876224].Roles.I ( First(d => d.Key = "Membre");
-                foreach (ulong id in members.members)
+                DiscordRole roleMembre = client.Guilds[138283154589876224].GetRole(361927682671378442);
+                foreach (ulong id in members.Members)
                 {
                     try
                     {
@@ -65,10 +42,10 @@ namespace Main
                             if ((DateTime.Now - member.JoinedAt) >= TimeSpan.FromMinutes(10))
                             {
                                 await member.GrantRoleAsync(roleMembre);
-                                members.members.Remove(id);
+                                members.Members.Remove(id);
                             }
                         }
-                        else members.members.Remove(id);
+                        else members.Members.Remove(id);
                     }
                     catch (Exception ex)
                     {
@@ -82,7 +59,7 @@ namespace Main
             {
                 Console.WriteLine(ex.ToString());
             }
-        }*/
+        }
 
         /* [Command("forceupdate")] // let's define this method as a command
          [Description("Force Member's Rank update.")] // this will be displayed to tell users what this command does when they invoke help
