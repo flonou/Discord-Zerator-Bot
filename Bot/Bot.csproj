@@ -12,8 +12,9 @@
     <PackageProjectUrl>https://github.com/Poneyy/Discord-Zerator-Bot</PackageProjectUrl>
     <PackageId>Discord-Zerator-Bot</PackageId>
     <PublishWithAspNetCoreTargetManifest>false</PublishWithAspNetCoreTargetManifest>
+    <Configurations>Debug;Release;Win</Configurations>
   </PropertyGroup>
-  <PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Win|AnyCPU'">
     <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
     <PublishSingleFile>true</PublishSingleFile>
   </PropertyGroup> 
