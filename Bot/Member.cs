@@ -5,8 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using DSharpPlus;
-using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using Newtonsoft.Json;
 

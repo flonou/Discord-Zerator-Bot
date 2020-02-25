@@ -1,13 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
-using DSharpPlus.CommandsNext.Converters;
 using DSharpPlus.Entities;
 using Newtonsoft.Json;
 

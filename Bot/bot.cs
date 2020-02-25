@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using DSharpPlus;
@@ -11,7 +10,6 @@ using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Newtonsoft.Json;
 using static Main.Twitch;
-using static Main.MemberCheck;
 
 namespace Main
 {
