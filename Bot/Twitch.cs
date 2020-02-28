@@ -1,9 +1,9 @@
 ﻿using System;
-using System.IO;
-using System.Text;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
@@ -14,15 +14,40 @@ namespace Main
 {
     public class Twitch : BaseCommandModule
     {
-        private static string Token => LoadToken();
+
+        private static StreamerStatus streamerStatuses;
+        public static StreamerStatus StreamerStatuses
+        {
+            get
+            {
+                if (streamerStatuses == null)
+                    streamerStatuses = StreamerStatus.Load("twitch.json");
+                return streamerStatuses;
+            }
+        }
+
+        private static string token;
+
+        private static string Token
+        {
+            get
+            {
+                if (token == null)
+                {
+                    token = ConfigJson.Instance.TwitchToken;
+                }
+                return token;
+            }
+        }
+
+
         // thread checkant les lives contenu dans la config
         public static async Task CheckLive(DiscordClient client)
         {
             //int[] stream = { 28575692, 89872865, 18887776 };
             while (true)
             {
-                var stream = LoadConfig();
-                foreach (Status id in stream.Status)
+                foreach (Status id in StreamerStatuses.Status)
                 {
                     await WebRequestAsync(id, client);
                     //Console.WriteLine(string.Format("Response: {0} et {1}", id.Id, id.IsLive));
@@ -82,9 +107,8 @@ namespace Main
                             }
                             /* DiscordChannel info = await client.GetChannelAsync(channel);
                              await info.SendMessageAsync(embed: embed);*/
-                            var conf = LoadConfig();
-                            conf.Status.First(d => d.Id == id.Id).IsLive = true;
-                            await SaveConfig(conf);
+                            StreamerStatuses.Status.First(d => d.Id == id.Id).IsLive = true;
+                            await StreamerStatuses.Save();
                             client.DebugLogger.LogMessage(LogLevel.Info, "PoneyyBot", $"{id} en live", DateTime.Now);
                         }
                         else client.DebugLogger.LogMessage(LogLevel.Info, "PoneyyBot", $"{id} en live", DateTime.Now);
@@ -113,9 +137,8 @@ namespace Main
                             await info.SendMessageAsync(embed: embed);
                         }
 
-                        var conf = LoadConfig();
-                        conf.Status.First(d => d.Id == id.Id).IsLive = false;
-                        await SaveConfig(conf);
+                        StreamerStatuses.Status.First(d => d.Id == id.Id).IsLive = false;
+                        await StreamerStatuses.Save();
                         client.DebugLogger.LogMessage(LogLevel.Info, "PoneyyBot", $"{id} plus en live", DateTime.Now);
                     }
                     //else Console.WriteLine($"{id} pas en live");
@@ -129,46 +152,6 @@ namespace Main
         }
 
 
-
-        private static StreamerStatus LoadConfig()
-        {
-            // first, let's load our configuration file
-            var json = File.ReadAllText("twitch.json", new UTF8Encoding(false));
-            // convert json to class
-            var cfgjson = JsonConvert.DeserializeObject<StreamerStatus>(json);
-            // return
-            return cfgjson;
-        }
-        private static string LoadToken()
-        {
-            // first, let's load our configuration file
-            var json = File.ReadAllText("config.json", new UTF8Encoding(false));
-            // convert json to class
-            var cfg = JsonConvert.DeserializeObject<ConfigJson>(json);
-            // return
-            return cfg.TwitchToken;
-        }
-        private static Task SaveConfig(StreamerStatus cfgjson)
-        {
-            // first, let's load our configuration file
-
-            //write string to file
-            //await File.OpenWrite("configMAL.json");
-            using (StreamWriter file = File.CreateText("twitch.json"))
-            {
-                JsonSerializer serializer = new JsonSerializer();
-                //serialize object directly into file stream
-                serializer.Serialize(file, cfgjson);
-            }
-            // first, let's load our configuration file
-            // convert json to class
-            // return
-            // next, let's load the values from that file
-            // to our client's configuration
-            //var cfgjson = JsonConvert.DeserializeObject<ConfigMAL>(json);
-            return Task.CompletedTask;
-        }
-
         [Group("twitch")] // this makes the class a group, but with a twist; the class now needs an ExecuteGroupAsync method
         [Description("twitch commands")]
         [RequirePermissions(Permissions.BanMembers)] // and restrict this to users who have appropriate permissions
@@ -177,7 +160,7 @@ namespace Main
             [Command("getidtwitch"), Description("Get the ID from an user")] // this will be displayed to tell users what this command does when they invoke help
             public async Task GetId(CommandContext ctx, [Description("Twitch user's name")] string user)
             {
-               //string WEBSERVICE_URL = "https://api.twitch.tv/kraken/streams/" + id.Id;
+                //string WEBSERVICE_URL = "https://api.twitch.tv/kraken/streams/" + id.Id;
                 var WEBSERVICE_URL = $"https://api.twitch.tv/kraken/users?login={user}";
                 try
                 {
@@ -206,8 +189,6 @@ namespace Main
             [Command("add"), Description("add twitch live on this channel")]
             public async Task Add(CommandContext ctx, [Description("user's twitch name")] string name)
             {
-                var cfgjson = LoadConfig();
-
                 await ctx.TriggerTypingAsync();
 
                 string WEBSERVICE_URL = $"https://api.twitch.tv/kraken/users?login={name}";
@@ -228,19 +209,19 @@ namespace Main
                         var twitch = JsonConvert.DeserializeObject<NameRequest>(jsonResponse);
                         int id = int.Parse(twitch.Users[0].Id);
                         //Console.WriteLine(string.Format("Response: {0}", jsonResponse));
-                        if (cfgjson.Status.Any(prod => prod.Id == id))
+                        if (StreamerStatuses.Status.Any(prod => prod.Id == id))
                         {
-                            int idx = cfgjson.Status.FindIndex(prod => prod.Id == id);
-                            cfgjson.Status[idx].Channels.Add(ctx.Channel.Id);
+                            int idx = StreamerStatuses.Status.FindIndex(prod => prod.Id == id);
+                            StreamerStatuses.Status[idx].Channels.Add(ctx.Channel.Id);
                             await ctx.RespondAsync($"Notification de live de {name} ajoutée a ce channel.");
                         }
                         else
                         {
                             Status stream = new Status(name, false, id, ctx.Channel.Id);
-                            cfgjson.Status.Add(stream);
+                            StreamerStatuses.Status.Add(stream);
                             await ctx.RespondAsync($"Notification de live de {name} ajoutée a ce channel.");
                         }
-                        await SaveConfig(cfgjson);
+                        await StreamerStatuses.Save();
                     }
                 }
                 catch
@@ -251,18 +232,16 @@ namespace Main
             [Command("del"), Aliases("delete"), Description("delete twitch live on this channel")]
             public async Task Del(CommandContext ctx, [Description("user's twitch name")] string name)
             {
-                var cfgjson = LoadConfig();
-
                 await ctx.TriggerTypingAsync();
-                if (cfgjson.Status.Any(prod => prod.Name == name))
+                if (StreamerStatuses.Status.Any(prod => prod.Name == name))
                 {
-                    int idx = cfgjson.Status.FindIndex(prod => prod.Name == name);
-                    if (cfgjson.Status[idx].Channels.Contains(ctx.Channel.Id))
+                    int idx = StreamerStatuses.Status.FindIndex(prod => prod.Name == name);
+                    if (StreamerStatuses.Status[idx].Channels.Contains(ctx.Channel.Id))
                     {
-                        cfgjson.Status[idx].Channels.Remove(ctx.Channel.Id);
-                        if (cfgjson.Status[idx].Channels.Count == 0)
+                        StreamerStatuses.Status[idx].Channels.Remove(ctx.Channel.Id);
+                        if (StreamerStatuses.Status[idx].Channels.Count == 0)
                         {
-                            cfgjson.Status.RemoveAt(idx);
+                            StreamerStatuses.Status.RemoveAt(idx);
                             await ctx.RespondAsync($"Notification de stream de {name} supprimée du serveur (dernier channel notifié supprimé).");
                         }
                         else
@@ -272,7 +251,7 @@ namespace Main
                     else
                         await ctx.RespondAsync($"Ce channel n'est pas notifié par ce live.");
 
-                    await SaveConfig(cfgjson);
+                    await StreamerStatuses.Save();
 
                 }
 
@@ -357,7 +336,7 @@ namespace Main
         }
 
         [JsonConstructor]
-        public Status(string Nam, bool IsLiv, int i, List<ulong> chan )
+        public Status(string Nam, bool IsLiv, int i, List<ulong> chan)
         {
             Name = Nam;
             IsLive = IsLiv;
@@ -376,10 +355,12 @@ namespace Main
             return this.Id == other.Id;
         }
     }
-    public class StreamerStatus
+    public class StreamerStatus : JsonClass<StreamerStatus>
     {
         [JsonProperty("status")]
         public List<Status> Status { get; set; } = new List<Status>();
+
+
     }
     public class User
     {
