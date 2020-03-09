@@ -1,14 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Newtonsoft.Json;
+using static Main.MemberCheck;
 using static Main.Twitch;
 
 namespace Main
@@ -18,6 +19,17 @@ namespace Main
         public DiscordClient Client { get; set; }
         private ConfigJson Config { get; }
         private CommandsNextExtension CommandsNextService { get; }
+
+        private static ListMembers listMembers;
+        public static ListMembers ListMembers
+        {
+            get
+            {
+                if (listMembers == null)
+                    listMembers = ListMembers.Load("member.json");
+                return listMembers;
+            }
+        }
 
         public Bot(ConfigJson cfg, int shardid)
         {
@@ -105,30 +117,9 @@ namespace Main
         {
             if (e.Client != Client)
             {
-                var json = "";
-                if (!File.Exists("member.json"))
-                    using (StreamWriter file = File.CreateText("member.json"))
-                    {
-                        JsonSerializer serializer = new JsonSerializer();
-                        //serialize object directly into file stream
-                        serializer.Serialize(file, @"{}");
-                    }
-                using (var fs = File.OpenRead("member.json"))
-                using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
-                    json = sr.ReadToEnd();
-                // next, let's load the values from that file
-                // to our client's configuration
-                //var cfgjson = JsonConvert.DeserializeObject<ConfigMAL>(json);
-                var cfgjson = JsonConvert.DeserializeObject<List<ulong>>(json);
 
-                cfgjson.Add(e.Client.CurrentUser.Id);
-
-                using (StreamWriter file = File.CreateText("member.json"))
-                {
-                    JsonSerializer serializer = new JsonSerializer();
-                    //serialize object directly into file stream
-                    serializer.Serialize(file, cfgjson);
-                }
+                ListMembers.Members.Add(e.Client.CurrentUser.Id);
+                ListMembers.Save();
 
             }
             return Task.CompletedTask;
@@ -243,4 +234,5 @@ namespace Main
            [JsonProperty("prefix")]
            public string CommandPrefix { get; private set; }
        }*/
+
 }

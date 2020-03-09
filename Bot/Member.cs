@@ -1,9 +1,9 @@
 ﻿using System;
-using System.IO;
-using System.Text;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using Newtonsoft.Json;
@@ -14,11 +14,11 @@ namespace Main
     {
         // thread checkant les lives contenu dans la config
         /************************* SEUL PARTIE A DECOMMENTER, 3.2.3 VERS 4.0 COMPATIBILITE ******/
-         public static async Task CheckMember(DiscordClient client)
-         {
-             await Check(client);
+        public static async Task CheckMember(DiscordClient client)
+        {
+            await Check(client);
 
-         }
+        }
 
 
 
@@ -27,7 +27,7 @@ namespace Main
         {
             try
             {
-                ListMembers members = LoadConfig();
+                ListMembers members = ListMembers.Load("member.json");
                 DiscordRole roleMembre = client.Guilds[138283154589876224].GetRole(361927682671378442);
                 foreach (ulong id in members.Members)
                 {
@@ -50,7 +50,7 @@ namespace Main
                         Console.WriteLine(ex.ToString());
                     }
                 }
-               await SaveConfig(members);
+                await members.Save();
 
             }
             catch (Exception ex)
@@ -88,40 +88,13 @@ namespace Main
              }
          }*/
 
-        private static ListMembers LoadConfig()
-        {
-            // first, let's load our configuration file
-            var json = File.ReadAllText("member.json", new UTF8Encoding(false));
-            // convert json to class
-            var cfgjson = JsonConvert.DeserializeObject<ListMembers>(json);
-            // return
-            return cfgjson;
-        }
 
-        private static Task SaveConfig(ListMembers cfgjson)
-        {
-            // first, let's load our configuration file
-
-            _ = JsonConvert.SerializeObject(cfgjson.ToString());
-
-            //write string to file
-            //await File.OpenWrite("configMAL.json");
-            using (StreamWriter file = File.CreateText("member.json"))
-            {
-                JsonSerializer serializer = new JsonSerializer();
-                //serialize object directly into file stream
-                serializer.Serialize(file, cfgjson);
-            }
-            // next, let's load the values from that file
-            // to our client's configuration
-            //var cfgjson = JsonConvert.DeserializeObject<ConfigMAL>(json);
-            return Task.CompletedTask;
-        }
-
-        public class ListMembers
+        public class ListMembers : JsonClass<ListMembers>
         {
             [JsonProperty("Members")]
             public List<ulong> Members { get; set; } = new List<ulong>();
+
+
         }
     }
 }

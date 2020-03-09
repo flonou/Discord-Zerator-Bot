@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using Newtonsoft.Json;
 using static Main.MemberCheck;
 
@@ -24,24 +24,9 @@ namespace Main
         {
             Console.Title = "Zerator Discord";
 
-            var cfg = new ConfigJson();
+            var cfg = ConfigJson.Instance;
             string json;
-            if (!File.Exists("config.json"))
-            {
-                json = JsonConvert.SerializeObject(cfg);
-                File.WriteAllText("config.json", json, new UTF8Encoding(false));
-                Console.WriteLine("Config file was not found, a new one was generated. Fill it with proper values and rerun this program");
-                Console.ReadKey();
 
-                return;
-            }
-            if (!File.Exists("member.json"))
-            {
-                var cfgProg = new ListMembers();
-                json = JsonConvert.SerializeObject(cfgProg);
-                File.WriteAllText("member.json", json, new UTF8Encoding(false));
-                Console.WriteLine("member file was not found, a new one was generated.");
-            }
             if (!File.Exists("prog.json"))
             {
                 var cfgProg = new ProgJson();
@@ -49,13 +34,7 @@ namespace Main
                 File.WriteAllText("prog.json", json, new UTF8Encoding(false));
                 Console.WriteLine("prog file was not found, a new one was generated.");
             }
-            if (!File.Exists("twitch.json"))
-            {
-                var cfgTwitch = new StreamerStatus();
-                json = JsonConvert.SerializeObject(cfgTwitch);
-                File.WriteAllText("twitch.json", json, new UTF8Encoding(false));
-                Console.WriteLine("twitch file was not found, a new one was generated.");
-            }
+
             if (!File.Exists("configMAL.json"))
             {
                 var cfgTwitch = new Dictionary<string, string>(new Dictionary<string, string>()); ;
@@ -63,8 +42,6 @@ namespace Main
                 File.WriteAllText("configMAL.json", json, new UTF8Encoding(false));
                 Console.WriteLine("configMAL file was not found, a new one was generated.");
             }
-            json = File.ReadAllText("config.json", new UTF8Encoding(false));
-            cfg = JsonConvert.DeserializeObject<ConfigJson>(json);
 
 
             var tskl = new List<Task>();
