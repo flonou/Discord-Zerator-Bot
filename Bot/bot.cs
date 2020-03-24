@@ -17,21 +17,21 @@ namespace Main
     internal sealed class Bot
     {
         public DiscordClient Client { get; set; }
-        private ConfigJson Config { get; }
+        private Config Config { get; }
         private CommandsNextExtension CommandsNextService { get; }
 
-        private static ListMembers listMembers;
-        public static ListMembers ListMembers
+        private static JsonClass<ListMembers> listMembers;
+        public static JsonClass<ListMembers> ListMembers
         {
             get
             {
                 if (listMembers == null)
-                    listMembers = ListMembers.Load("member.json");
+                    listMembers = JsonClass<ListMembers>.Load("member.json");
                 return listMembers;
             }
         }
 
-        public Bot(ConfigJson cfg, int shardid)
+        public Bot(Config cfg, int shardid)
         {
             // then we want to instantiate our client
             this.Config = cfg;
@@ -94,6 +94,7 @@ namespace Main
                             async e => await CheckMember(this.Client), null, TimeSpan.FromSeconds(5), TimeSpan.FromMinutes(10));
             */
         }
+
         private async Task Unban(GuildBanRemoveEventArgs e)
         {
             if (e.Client != Client)
@@ -118,7 +119,7 @@ namespace Main
             if (e.Client != Client)
             {
 
-                ListMembers.Members.Add(e.Client.CurrentUser.Id);
+                ListMembers.Data.Members.Add(e.Client.CurrentUser.Id);
                 ListMembers.Save();
 
             }

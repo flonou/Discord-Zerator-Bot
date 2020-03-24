@@ -15,13 +15,13 @@ namespace Main
     public class Twitch : BaseCommandModule
     {
 
-        private static StreamerStatus streamerStatuses;
-        public static StreamerStatus StreamerStatuses
+        private static JsonClass<StreamerStatus> streamerStatuses;
+        public static JsonClass<StreamerStatus> StreamerStatuses
         {
             get
             {
                 if (streamerStatuses == null)
-                    streamerStatuses = StreamerStatus.Load("twitch.json");
+                    streamerStatuses = JsonClass<StreamerStatus>.Load("twitch.json");
                 return streamerStatuses;
             }
         }
@@ -34,7 +34,7 @@ namespace Main
             {
                 if (token == null)
                 {
-                    token = ConfigJson.Instance.TwitchToken;
+                    token = JsonConfig.Instance.Data.TwitchToken;
                 }
                 return token;
             }
@@ -47,7 +47,7 @@ namespace Main
             //int[] stream = { 28575692, 89872865, 18887776 };
             while (true)
             {
-                foreach (Status id in StreamerStatuses.Status)
+                foreach (Status id in StreamerStatuses.Data.Status)
                 {
                     await WebRequestAsync(id, client);
                     //Console.WriteLine(string.Format("Response: {0} et {1}", id.Id, id.IsLive));
@@ -107,7 +107,7 @@ namespace Main
                             }
                             /* DiscordChannel info = await client.GetChannelAsync(channel);
                              await info.SendMessageAsync(embed: embed);*/
-                            StreamerStatuses.Status.First(d => d.Id == id.Id).IsLive = true;
+                            StreamerStatuses.Data.Status.First(d => d.Id == id.Id).IsLive = true;
                             await StreamerStatuses.Save();
                             client.DebugLogger.LogMessage(LogLevel.Info, "PoneyyBot", $"{id} en live", DateTime.Now);
                         }
@@ -137,7 +137,7 @@ namespace Main
                             await info.SendMessageAsync(embed: embed);
                         }
 
-                        StreamerStatuses.Status.First(d => d.Id == id.Id).IsLive = false;
+                        StreamerStatuses.Data.Status.First(d => d.Id == id.Id).IsLive = false;
                         await StreamerStatuses.Save();
                         client.DebugLogger.LogMessage(LogLevel.Info, "PoneyyBot", $"{id} plus en live", DateTime.Now);
                     }
@@ -209,16 +209,16 @@ namespace Main
                         var twitch = JsonConvert.DeserializeObject<NameRequest>(jsonResponse);
                         int id = int.Parse(twitch.Users[0].Id);
                         //Console.WriteLine(string.Format("Response: {0}", jsonResponse));
-                        if (StreamerStatuses.Status.Any(prod => prod.Id == id))
+                        if (StreamerStatuses.Data.Status.Any(prod => prod.Id == id))
                         {
-                            int idx = StreamerStatuses.Status.FindIndex(prod => prod.Id == id);
-                            StreamerStatuses.Status[idx].Channels.Add(ctx.Channel.Id);
+                            int idx = StreamerStatuses.Data.Status.FindIndex(prod => prod.Id == id);
+                            StreamerStatuses.Data.Status[idx].Channels.Add(ctx.Channel.Id);
                             await ctx.RespondAsync($"Notification de live de {name} ajoutée a ce channel.");
                         }
                         else
                         {
                             Status stream = new Status(name, false, id, ctx.Channel.Id);
-                            StreamerStatuses.Status.Add(stream);
+                            StreamerStatuses.Data.Status.Add(stream);
                             await ctx.RespondAsync($"Notification de live de {name} ajoutée a ce channel.");
                         }
                         await StreamerStatuses.Save();
@@ -233,15 +233,15 @@ namespace Main
             public async Task Del(CommandContext ctx, [Description("user's twitch name")] string name)
             {
                 await ctx.TriggerTypingAsync();
-                if (StreamerStatuses.Status.Any(prod => prod.Name == name))
+                if (StreamerStatuses.Data.Status.Any(prod => prod.Name == name))
                 {
-                    int idx = StreamerStatuses.Status.FindIndex(prod => prod.Name == name);
-                    if (StreamerStatuses.Status[idx].Channels.Contains(ctx.Channel.Id))
+                    int idx = StreamerStatuses.Data.Status.FindIndex(prod => prod.Name == name);
+                    if (StreamerStatuses.Data.Status[idx].Channels.Contains(ctx.Channel.Id))
                     {
-                        StreamerStatuses.Status[idx].Channels.Remove(ctx.Channel.Id);
-                        if (StreamerStatuses.Status[idx].Channels.Count == 0)
+                        StreamerStatuses.Data.Status[idx].Channels.Remove(ctx.Channel.Id);
+                        if (StreamerStatuses.Data.Status[idx].Channels.Count == 0)
                         {
-                            StreamerStatuses.Status.RemoveAt(idx);
+                            StreamerStatuses.Data.Status.RemoveAt(idx);
                             await ctx.RespondAsync($"Notification de stream de {name} supprimée du serveur (dernier channel notifié supprimé).");
                         }
                         else
@@ -355,7 +355,8 @@ namespace Main
             return this.Id == other.Id;
         }
     }
-    public class StreamerStatus : JsonClass<StreamerStatus>
+
+    public class StreamerStatus
     {
         [JsonProperty("status")]
         public List<Status> Status { get; set; } = new List<Status>();

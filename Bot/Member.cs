@@ -27,9 +27,9 @@ namespace Main
         {
             try
             {
-                ListMembers members = ListMembers.Load("member.json");
+                JsonClass<ListMembers> members = JsonClass<ListMembers>.Load("member.json");
                 DiscordRole roleMembre = client.Guilds[138283154589876224].GetRole(361927682671378442);
-                foreach (ulong id in members.Members)
+                foreach (ulong id in members.Data.Members)
                 {
                     try
                     {
@@ -40,10 +40,10 @@ namespace Main
                             if ((DateTime.Now - member.JoinedAt) >= TimeSpan.FromMinutes(10))
                             {
                                 await member.GrantRoleAsync(roleMembre);
-                                members.Members.Remove(id);
+                                members.Data.Members.Remove(id);
                             }
                         }
-                        else members.Members.Remove(id);
+                        else members.Data.Members.Remove(id);
                     }
                     catch (Exception ex)
                     {
@@ -88,12 +88,10 @@ namespace Main
              }
          }*/
 
-
-        public class ListMembers : JsonClass<ListMembers>
+        public class ListMembers
         {
             [JsonProperty("Members")]
             public List<ulong> Members { get; set; } = new List<ulong>();
-
 
         }
     }

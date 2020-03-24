@@ -24,7 +24,7 @@ namespace Main
         {
             Console.Title = "Zerator Discord";
 
-            var cfg = ConfigJson.Instance;
+            var cfg = JsonConfig.Instance.Data;
             string json;
 
             if (!File.Exists("prog.json"))

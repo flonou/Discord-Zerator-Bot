@@ -4,23 +4,35 @@ using Newtonsoft.Json;
 namespace Main
 {
 
-    internal sealed class ConfigJson : JsonClass<ConfigJson>
+    internal sealed class JsonConfig : JsonClass<Config>
     {
-        private static ConfigJson _instance;
+        private static JsonClass<Config> _instance;
 
         /// <summary>
         /// Singleton pattern
         /// </summary>
-        public static ConfigJson Instance
+        public static JsonClass<Config> Instance
         {
             get
             {
                 if (_instance == null)
-                    _instance = ConfigJson.Load("config.json");
+                    _instance = JsonConfig.Load("config.json");
                 return _instance;
 
             }
         }
+        public override void PostCreateFile()
+        {
+            Console.WriteLine("Config file was not found, a new one was generated. Fill it with proper values and rerun this program");
+            Console.ReadKey();
+        }
+    }
+
+    internal sealed class Config
+    {
+
+
+
 
 
         [JsonProperty("token")]
@@ -36,10 +48,5 @@ namespace Main
         public string TwitchToken { get; private set; } = "";
 
 
-        public override void PostCreateFile()
-        {
-            Console.WriteLine("Config file was not found, a new one was generated. Fill it with proper values and rerun this program");
-            Console.ReadKey();
-        }
     }
 }

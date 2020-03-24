@@ -20,11 +20,11 @@ namespace Main
             private set;
         }
 
-        public static T Load(string fileName)
+        public static JsonClass<T> Load(string fileName)
         {
             string fullFileName = Path.GetFullPath(fileName);
             if (cache.ContainsKey(fullFileName))
-                return cache[fullFileName].Data;
+                return cache[fullFileName];
 
             if (!File.Exists(fullFileName))
             {
@@ -35,7 +35,7 @@ namespace Main
                 Console.WriteLine(fullFileName + " file was not found, a new one was generated.");
                 cache.Add(fullFileName, jsonClass);
                 jsonClass.PostCreateFile();
-                return jsonClass.Data;
+                return jsonClass;
             }
             else
             {
@@ -47,7 +47,7 @@ namespace Main
                 jsonClass.FileName = fileName;
                 cache.Add(fullFileName, jsonClass);
                 // return
-                return jsonClass.Data;
+                return jsonClass;
             }
         }
 
